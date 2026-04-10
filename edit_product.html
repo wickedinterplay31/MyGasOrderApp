@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Product</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="dashboard-shell">
+    <div class="flash-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="toast {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <div class="dashboard-layout">
+      <nav class="dashboard-menu">
+        <div class="menu-top">
+          <ul>
+            <li><a href="/dashboard">
+              <span class="menu-icon">🏠</span>
+              Dashboard
+            </a></li>
+            <li><a href="/report">
+              <span class="menu-icon">📄</span>
+              Report
+            </a></li>
+            <li><a href="/seller_stats">
+              <span class="menu-icon">📊</span>
+              Stats
+            </a></li>
+            {% if user.is_main_seller %}
+            <li><a href="/confirmations">
+              <span class="menu-icon">✅</span>
+              Confirmations
+            </a></li>
+            <li><a href="/sellers">
+              <span class="menu-icon">👥</span>
+              Sellers
+            </a></li>
+            {% endif %}
+          </ul>
+          {% if user.role == 'seller' %}
+          <div class="menu-stats-card">
+            <div class="stats-header">
+              <span class="menu-icon">📊</span>
+              <div>
+                <strong>Gas Sales</strong>
+                <p class="stats-subtitle">Live stock & sales overview</p>
+              </div>
+            </div>
+            <div class="stats-summary">
+              <span class="stat-pill"><strong>{{ seller_stats.total_sold }}</strong> sold</span>
+              <span class="stat-pill"><strong>{{ seller_stats.total_remaining }}</strong> left</span>
+              <span class="stat-pill"><strong>{{ seller_stats.product_count }}</strong> products</span>
+            </div>
+            <button type="button" class="stats-toggle button secondary">Show details</button>
+            <div class="stats-detail" hidden>
+              <ul>
+                {% for product in seller_stats.product_stats %}
+                <li>
+                  <div class="stats-row">
+                    <span>{{ product.type }}</span>
+                    <span>{{ product.sold }} sold</span>
+                    <span>{{ product.remaining }} left</span>
+                  </div>
+                  <div class="stats-progress-bar">
+                    <div class="stats-progress-fill" style="width: {{ product.sold_percent }}%;"></div>
+                  </div>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+          <a href="/account">
+            <span class="menu-icon">👤</span>
+            Account
+          </a>
+          <a href="/logout">
+            <span class="menu-icon">⚙️</span>
+            Logout
+          </a>
+        </div>
+      </nav>
+
+      <div class="dashboard-main">
+        <header class="dashboard-header">
+          <button id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle menu">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+          </button>
+          <h1>Edit Product</h1>
+        </header>
+
+        <section class="account-section">
+          <form method="post" action="/edit_product/{{ product.id }}" class="account-form">
+            <label>Product Label</label>
+            <input type="text" name="label" value="{{ product.label }}" required />
+
+            <label>Description</label>
+            <textarea name="description" rows="4">{{ product.description or '' }}</textarea>
+
+            <label>Available Cylinders</label>
+            <input type="number" name="available_cylinders" value="{{ product.available_cylinders }}" min="0" required />
+
+            <button type="submit">Update Product</button>
+            <a href="/dashboard" class="button secondary">Cancel</a>
+          </form>
+        </section>
+      </div>
+    </div>
+  </div>
+  <script src="/static/script.js"></script>
+</body>
+</html></content>
+<parameter name="filePath">c:\Users\supervisor-Ali\Desktop\project\templates\edit_product.html

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gas Order Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="dashboard-shell">
+    <div class="flash-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="toast {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+    <header class="dashboard-header">
+      <button id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+      <h1>Welcome {{ 'Seller' if user.role == 'seller' else 'Buyer' }} {{ user.username }}</h1>
+    </header>
+
+    <div class="dashboard-layout">
+      <nav class="dashboard-menu">
+        <div class="menu-top">
+          <ul>
+            {% if user.role == 'seller' %}
+              <li><a href="#seller-product-panel">
+                <span class="menu-icon">📦</span>
+                Products
+              </a></li>
+            {% if user.role == 'seller' %}
+            <li><a href="/report">
+              <span class="menu-icon">📄</span>
+              Report
+            </a></li>
+            {% endif %}
+              <li><a href="/seller_stats">
+                <span class="menu-icon">📊</span>
+                Stats
+              </a></li>
+              {% if user.is_main_seller %}
+              <li><a href="/confirmations">
+                <span class="menu-icon">✅</span>
+                Confirmations
+              </a></li>
+              <li><a href="/sellers">
+                <span class="menu-icon">👥</span>
+                Sellers
+              </a></li>
+              {% endif %}
+            {% else %}
+              <li><a href="#order-section">
+                <span class="menu-icon">🛒</span>
+                Order
+              </a></li>
+              <li><a href="/report">
+                <span class="menu-icon">📄</span>
+                Report
+              </a></li>
+            {% endif %}
+          </ul>
+          {% if user.role == 'seller' %}
+          <div class="menu-stats-card">
+            <div class="stats-header">
+              <span class="menu-icon">📊</span>
+              <div>
+                <strong>Gas Sales</strong>
+                <p class="stats-subtitle">Live stock & sales overview</p>
+              </div>
+            </div>
+            <div class="stats-summary">
+              <span class="stat-pill"><strong>{{ seller_stats.total_sold }}</strong> sold</span>
+              <span class="stat-pill"><strong>{{ seller_stats.total_remaining }}</strong> left</span>
+              <span class="stat-pill"><strong>{{ seller_stats.product_count }}</strong> products</span>
+            </div>
+            <button type="button" class="stats-toggle button secondary">Show details</button>
+            <div class="stats-detail" hidden>
+              <ul>
+                {% for product in seller_stats.product_stats %}
+                <li>
+                  <div class="stats-row">
+                    <span>{{ product.type }}</span>
+                    <span>{{ product.sold }} sold</span>
+                    <span>{{ product.remaining }} left</span>
+                  </div>
+                  <div class="stats-progress-bar">
+                    <div class="stats-progress-fill" style="width: {{ product.sold_percent }}%;"></div>
+                  </div>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+          <a href="/account">
+            <span class="menu-icon">👤</span>
+            Account
+          </a>
+          <a href="/logout">
+            <span class="menu-icon">⚙️</span>
+            Logout
+          </a>
+        </div>
+      </nav>
+
+      <div class="dashboard-main">
+        {% if user.role == 'seller' %}
+    <section class="info-banner">
+      <strong>Seller administrator mode:</strong> You can view ordered gas records and manage products.
+    </section>
+
+    <section id="seller-product-panel" class="seller-product-panel">
+      <h2>Manage Your Gas Products</h2>
+      
+      <!-- Add New Product Form -->
+      <div class="product-section">
+        <h3>Add New Product</h3>
+        <form method="post" action="/product/add" class="product-form">
+          <label>Product name</label>
+          <input type="text" name="label" placeholder="6kg Cylinder" required />
+
+          <label>Gas type</label>
+          <input type="text" name="type" placeholder="6kg" required />
+
+          <label>Description</label>
+          <textarea name="description" placeholder="Describe your gas product..." rows="3"></textarea>
+
+          <label>Available Cylinders</label>
+          <input type="number" name="available_cylinders" placeholder="10" min="0" required />
+
+          <label>Image URL</label>
+          <input type="url" name="image_url" placeholder="https://example.com/cylinder.png" />
+
+          <button type="submit">Add Product</button>
+        </form>
+      </div>
+
+      <!-- Existing Products -->
+      <div class="product-section">
+        <h3>Your Products</h3>
+        {% if gas_options %}
+        <div class="product-grid">
+          {% for gas in gas_options %}
+          <div class="product-card">
+            <div class="product-image">
+              {% if gas.image_url %}
+                <img src="{{ gas.image_url }}" alt="{{ gas.label }}" />
+              {% else %}
+                <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="20" y="18" width="80" height="84" rx="18" ry="18" fill="#e2f7fd" stroke="#4a90e2" stroke-width="6" />
+                  <circle cx="60" cy="30" r="10" fill="#4a90e2" />
+                  <text x="60" y="75" text-anchor="middle" font-size="20" fill="#333" font-family="Arial">{{ gas.type }}</text>
+                </svg>
+              {% endif %}
+            </div>
+            <div class="product-info">
+              <h4>{{ gas.label }}</h4>
+              <p class="product-description">{{ gas.description or 'No description' }}</p>
+              <p class="product-availability">Available: {{ gas.available_cylinders }} cylinders</p>
+              <div class="product-actions">
+                <button onclick="showProductDetails({{ gas.id }})" class="view-btn">View</button>
+                <a href="/edit_product/{{ gas.id }}" class="edit-btn">Edit</a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p>No products added yet. Add your first product above!</p>
+        {% endif %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if user.role != 'seller' %}
+    <section id="order-section" class="order-section">
+      <h2>Order Gas</h2>
+      <div class="order-grid">
+        {% for gas in gas_options %}
+        <div class="gas-card" onclick="showProductDetails({{ gas.id }})">
+          <div class="gas-image">
+            {% if gas.image_url %}
+              <img src="{{ gas.image_url }}" alt="{{ gas.label }}" class="product-image" />
+            {% else %}
+              <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <rect x="20" y="18" width="80" height="84" rx="18" ry="18" fill="#e2f7fd" stroke="#4a90e2" stroke-width="6" />
+                <circle cx="60" cy="30" r="10" fill="#4a90e2" />
+                <text x="60" y="75" text-anchor="middle" font-size="20" fill="#333" font-family="Arial">{{ gas.type }}</text>
+              </svg>
+            {% endif %}
+          </div>
+          <h3>{{ gas.label }}</h3>
+          <p class="gas-description">{{ gas.description or 'No description available' }}</p>
+          <p class="gas-availability">Available: {{ gas.available_cylinders }} cylinders</p>
+          {% if user.role == 'seller' %}
+          <button class="edit-btn" onclick="editProduct({{ gas.id }})">Edit Product</button>
+          {% endif %}
+          <form method="post" action="/order" class="gas-action-form">
+            <input type="hidden" name="gas_type" value="{{ gas.type }}" />
+            <input type="hidden" name="action" value="order" />
+            <input type="number" name="quantity" min="1" max="{{ gas.available_cylinders }}" value="1" required />
+            <button type="submit">Order {{ gas.type }}</button>
+          </form>
+        </div>
+        {% endfor %}
+
+        <div class="gas-card refill-card">
+          <div class="gas-image refill-image">
+            <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="60" cy="60" r="40" fill="#fff3d9" stroke="#f5a623" stroke-width="6" />
+              <polyline points="48,48 72,60 48,72" fill="none" stroke="#f5a623" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <h3>Refill Cylinder</h3>
+          <p class="gas-description">Request a refill for your existing cylinder</p>
+          <form method="post" action="/order" class="gas-action-form">
+            <input type="hidden" name="gas_type" value="refill" />
+            <input type="hidden" name="action" value="refill" />
+            <input type="number" name="quantity" min="1" value="1" required />
+            <button type="submit">Request Refill</button>
+          </form>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Details Modal -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div id="productDetails"></div>
+    </div>
+  </div>
+
+  <script>
+    // Menu toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menu-toggle');
+      const dashboardMenu = document.querySelector('.dashboard-menu');
+      const dashboardLayout = document.querySelector('.dashboard-layout');
+      
+      if (menuToggle && dashboardMenu) {
+        menuToggle.addEventListener('click', function() {
+          dashboardMenu.classList.toggle('menu-open');
+          dashboardLayout.classList.toggle('menu-open');
+          menuToggle.classList.toggle('menu-open');
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+          if (!dashboardMenu.contains(event.target) && !menuToggle.contains(event.target)) {
+            dashboardMenu.classList.remove('menu-open');
+            dashboardLayout.classList.remove('menu-open');
+            menuToggle.classList.remove('menu-open');
+          }
+        });
+      }
+    });
+
+    function showProductDetails(productId) {
+      // Fetch product details via AJAX or show static details
+      const products = {{ gas_options | tojson }};
+      const product = products.find(p => p.id === productId);
+      
+      if (product) {
+        const details = `
+          <h2>${product.label}</h2>
+          <div class="product-detail-image">
+            ${product.image_url ? `<img src="${product.image_url}" alt="${product.label}" />` : 
+              `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <rect x="20" y="18" width="80" height="84" rx="18" ry="18" fill="#e2f7fd" stroke="#4a90e2" stroke-width="6" />
+                <circle cx="60" cy="30" r="10" fill="#4a90e2" />
+                <text x="60" y="75" text-anchor="middle" font-size="20" fill="#333" font-family="Arial">${product.type}</text>
+              </svg>`}
+          </div>
+          <p><strong>Description:</strong> ${product.description || 'No description available'}</p>
+          <p><strong>Available Cylinders:</strong> ${product.available_cylinders}</p>
+          <p><strong>Type:</strong> ${product.type}</p>
+        `;
+        document.getElementById('productDetails').innerHTML = details;
+        document.getElementById('productModal').style.display = 'block';
+      }
+    }
+
+    function editProduct(productId) {
+      event.stopPropagation(); // Prevent modal from opening
+      // Redirect to edit page or show edit form
+      window.location.href = `/edit_product/${productId}`;
+    }
+
+    function closeModal() {
+      document.getElementById('productModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('productModal');
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
+  </script>
+  <script src="/static/script.js"></script>
+</body>
+</html>

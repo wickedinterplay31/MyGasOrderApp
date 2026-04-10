@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <div class="flash-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="toast {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+    <div class="auth-panel signup-panel">
+      <h1>Sign Up</h1>
+      <p class="subtitle">Create a buyer or seller account.</p>
+      <form method="post" action="/signup" class="signup-form">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="Username" required />
+
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Password" required />
+
+        <label>Email (optional)</label>
+        <input type="email" name="email" placeholder="Email address" />
+
+        <label>Phone (optional)</label>
+        <input type="text" name="phone" placeholder="Phone number" />
+
+        <label>Account type</label>
+        <select name="role">
+          <option value="buyer">Buyer</option>
+          <option value="seller">Seller</option>
+        </select>
+        <p class="hint">Seller accounts require main seller approval before they can log in.</p>
+
+        <button type="submit">Create Account</button>
+      </form>
+      <div class="form-footer">
+        <p>Already have an account? <a href="/">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+  <script src="/static/script.js"></script>
+</body>
+</html>

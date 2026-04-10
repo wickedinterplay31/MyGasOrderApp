@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gas App Login</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <div class="flash-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="toast {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+    <div class="auth-panel">
+      <h1>Gas Order Login</h1>
+      <p class="subtitle">Choose your account type to sign in.</p>
+
+      <!-- Role Selection -->
+      <div id="role-selection" class="role-selection">
+        <button class="role-btn buyer-btn" onclick="showLoginForm('buyer')">
+          <span class="role-icon">🛒</span>
+          <span class="role-title">Login as Buyer</span>
+          <span class="role-desc">Order gas products</span>
+        </button>
+        <button class="role-btn seller-btn" onclick="showLoginForm('seller')">
+          <span class="role-icon">🏪</span>
+          <span class="role-title">Login as Seller</span>
+          <span class="role-desc">Manage gas inventory</span>
+        </button>
+      </div>
+
+      <!-- Buyer Login Form -->
+      <div id="buyer-login" class="login-form" style="display: none;">
+        <div class="form-header">
+          <button class="back-btn" onclick="showRoleSelection()">&larr; Back</button>
+          <h2>Buyer Login</h2>
+        </div>
+        <form method="post" action="/">
+          <input type="hidden" name="role" value="buyer" />
+          <label>Username</label>
+          <input type="text" name="username" placeholder="Buyer username" required />
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Password" required />
+          <button type="submit">Login as Buyer</button>
+        </form>
+      </div>
+
+      <!-- Seller Login Form -->
+      <div id="seller-login" class="login-form" style="display: none;">
+        <div class="form-header">
+          <button class="back-btn" onclick="showRoleSelection()">&larr; Back</button>
+          <h2>Seller Login</h2>
+        </div>
+        <form method="post" action="/">
+          <input type="hidden" name="role" value="seller" />
+          <label>Username</label>
+          <input type="text" name="username" placeholder="Seller username" required />
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Password" required />
+          <button type="submit">Login as Seller</button>
+        </form>
+      </div>
+
+      <div class="form-footer">
+        <p>New customer? <a href="/signup">Create an account</a></p>
+        <p class="hint">Default admin seller: <strong>seller</strong> / <strong>admin123</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showLoginForm(role) {
+      // Hide role selection
+      document.getElementById('role-selection').style.display = 'none';
+      
+      // Hide both forms first
+      document.getElementById('buyer-login').style.display = 'none';
+      document.getElementById('seller-login').style.display = 'none';
+      
+      // Show the selected form
+      document.getElementById(role + '-login').style.display = 'block';
+    }
+
+    function showRoleSelection() {
+      // Hide both forms
+      document.getElementById('buyer-login').style.display = 'none';
+      document.getElementById('seller-login').style.display = 'none';
+      
+      // Show role selection
+      document.getElementById('role-selection').style.display = 'flex';
+    }
+  </script>
+  <script src="/static/script.js"></script>
+</body>
+</html>
